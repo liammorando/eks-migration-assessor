@@ -4,6 +4,23 @@
 
 ![Architecture](architecture.png)
 
+## Descripción en Español
+
+**Evaluador de Preparación para Migración a EKS**: análisis estático determinista de repositorios públicos de GitHub/GitLab para detectar patrones anti-migración a Kubernetes (EKS), con puntuación de preparación (0-100), hallazgos categorizados por severidad, plan de migración por fases con acciones concretas, y reporte ejecutivo opcional mediante LLM local (Ollama).
+
+### Características principales
+
+- **Análisis determinista**: 22+ reglas de detección en 8 categorías (Estado, Configuración, Red, Contenedor, Logging, Ciclo de vida, Docker Compose, Positivos)
+- **Puntuación 0-100** con niveles: Ready (≥85), Ready with minor changes (65-84), Needs significant work (40-64), Not ready (<40)
+- **Plan de migración** por fases (1-4) con acciones, esfuerzo (S/M/L) y referencias a hallazgos
+- **LLM opcional** (Ollama local) para resumen ejecutivo y chat interactivo
+- **Interfaz web** (Streamlit) con tema oscuro, i18n (EN/ES), exportación MD/JSON
+- **Kubernetes manifests** (Kustomize base + overlays para kind y EKS)
+- **Terraform** completo (EKS + VPC + EBS CSI + Pod Identity + ECR + S3)
+- **CI/CD gratis** (GitHub Actions: tests, Docker build, K8s validation, Terraform validation)
+
+---
+
 ## Features
 
 - **Deterministic static analysis** — 17 detection rules across 7 categories (State, Config, Networking, Container, Logging, Lifecycle, Compose)
@@ -34,24 +51,24 @@ Sidebar sections:
 
 Design system documented in [docs/ui-design.md](docs/ui-design.md). Screenshots: ![Overview](docs/screenshots/overview.png) ![Findings](docs/screenshots/findings.png) ![Plan](docs/screenshots/plan.png) ![Report](docs/screenshots/report.png)
 
-## Quick Start
+## Quick Start / Inicio Rápido
 
-### Base Install
+### Instalación Base
 ```bash
 pip install -e ".[dev]"
 ```
 
-### With Local LLM (Ollama)
+### Con LLM Local (Ollama)
 ```bash
 pip install -e ".[dev,llm]"
 ```
 
-### With AWS Support
+### Con Soporte AWS
 ```bash
 pip install -e ".[dev,aws]"
 ```
 
-### Local Python
+### Python Local (CLI)
 ```bash
 eks-migration-assessor scan https://github.com/pallets/flask --no-llm --out ./report
 ```
@@ -59,26 +76,26 @@ eks-migration-assessor scan https://github.com/pallets/flask --no-llm --out ./re
 ### Docker Compose
 ```bash
 docker compose up
-# Open http://localhost:8501
+# Abre http://localhost:8501
 ```
 
-### Local Kubernetes (kind)
+### Kubernetes Local (kind)
 ```bash
 kind create cluster --config k8s/kind-config.yaml --name eks-assessor
 docker build -f docker/Dockerfile -t eks-assessor:dev .
 kind load docker-image eks-assessor:dev --name eks-assessor
 kubectl apply -k k8s/overlays/local
 kubectl -n eks-assessor port-forward svc/eks-assessor 8501:80
-# Open http://localhost:8501
+# Abre http://localhost:8501
 ```
 
-### EKS Deployment (production)
+### Despliegue en EKS (producción)
 ```bash
 cd terraform
 terraform fmt -check -recursive
 terraform init -backend=false
 terraform validate
-# Then: terraform init && terraform apply  (requires AWS credentials)
+# Luego: terraform init && terraform apply  (requiere credenciales AWS)
 ```
 
 ## Architecture
@@ -123,7 +140,7 @@ flowchart TD
     AgentCore --> Report
 ```
 
-## Why It's Free
+## Why It's Free / Por Qué Es Gratis
 
 | Component | Cost |
 |-----------|------|
@@ -135,6 +152,7 @@ flowchart TD
 | Terraform | Validated only, never applied |
 
 **No API keys, no cloud accounts, no paid tiers.**
+**Sin claves API, sin cuentas en la nube, sin planes de pago.**
 
 ## What Is Intentionally Not Deployed
 

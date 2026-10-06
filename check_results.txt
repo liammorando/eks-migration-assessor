@@ -1,9 +1,0 @@
-NOT found I001
-NOT found E501
-NOT found W293
-NOT found B905
-NOT found C401
-NOT found T201
-NOT found I001
-NOT found F401
-NOT found F841
