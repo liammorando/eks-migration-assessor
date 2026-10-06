@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eks-migration-assessor"
+version = "0.1.0"
+description = "EKS Migration Readiness Assessor"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.64.0",
+    "pydantic>=2.0",
+    "pyyaml",
+    "requests",
+]
+
+[project.optional-dependencies]
+llm = ["strands-agents[ollama]>=0.1.0"]
+dev = [
+    "pytest>=9.0",
+    "pytest-asyncio",
+    "ruff>=0.5.0",
+    "streamlit-testing>=1.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "app", "tests", "scripts"]
+include = ["*.py"]
+exclude = [
+    ".venv",
+    "venv",
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    "dist",
+    "build",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "T20", # flake8-print
+]
+ignore = [
+    "E501",  # line too long - handled by line-length
+    "F403",  # star imports in tests
+    "F401",  # unused imports in some cases
+    "F841",  # unused variables in some cases
+]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F403", "F401", "F841", "E501", "T201", "UP031"]
+"src/assessor/scanner/rules/*.py" = ["E501"]
+"scripts/selfcheck.py" = ["T201", "E741"]
+"scripts/gen_rules_doc.py" = ["T201"]
+"src/*" = ["E402", "T201", "UP035", "B028", "C414"]
+"src/assessor/cli.py" = ["T201", "B025"]
+"src/assessor/agentcore_entrypoint.py" = ["T201"]
+"src/assessor/planner.py" = ["C414"]
+"src/assessor/service.py" = ["UP035"]
+"src/assessor/storage.py" = ["B028"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+markers = [
+    "perf: marks tests as performance tests",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-q"
+
+[tool.setuptools.packages.find]
+where = ["src"]

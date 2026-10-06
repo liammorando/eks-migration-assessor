@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - kind-config:/root/.kube
+    env_file:
+      - ./backend/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KUBECONFIG=/root/.kube/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ai-kubernetes-agent-network
+      - kind
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_API_BASE_URL=http://backend:8000
+      - NEXT_PUBLIC_INSFORGE_BASE_URL=https://ifn44snm.us-east.insforge.app
+      - NEXT_PUBLIC_INSFORGE_ANON_KEY=your-anon-key
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ai-kubernetes-agent-network
+
+networks:
+  ai-kubernetes-agent-network:
+    external: true
+  kind:
+    external: true
+
+volumes:
+  kind-config:
+    external: true

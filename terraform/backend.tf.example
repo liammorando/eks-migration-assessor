@@ -1,0 +1,22 @@
+# backend.tf.example
+# Copy this file to backend.tf and configure with your S3 bucket and DynamoDB table
+# for remote state storage with locking.
+#
+# IMPORTANT: This file is an example. Copy to backend.tf and configure before running terraform init.
+
+terraform {
+  backend "s3" {
+    bucket         = "your-terraform-state-bucket"
+    key            = "eks-assessor/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-state-lock"
+  }
+}
+
+# To use:
+# 1. Create an S3 bucket for Terraform state (with versioning and encryption)
+# 2. Create a DynamoDB table for state locking (primary key: "LockID", type: String)
+# 3. Copy this file to backend.tf
+# 4. Update the bucket name, region, and DynamoDB table name
+# 5. Run: terraform init -migrate-state

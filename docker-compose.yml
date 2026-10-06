@@ -1,0 +1,55 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - workspace:/workspace
+    environment:
+      - MODEL_PROVIDER=${MODEL_PROVIDER:-ollama}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
+      - WORKSPACE_DIR=/workspace
+      - STREAMLIT_SERVER_HEADLESS=true
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # LLM profile - Ollama service for local LLM support
+  # To use: MODEL_PROVIDER=ollama docker compose --profile llm up
+  # After starting, pull a model: docker compose exec ollama ollama pull llama3.2
+  ollama:
+    image: ollama/ollama:0.3.12
+    profiles: ["llm"]
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  workspace:
+  ollama_models:
+
+# Usage:
+#   # Without LLM (default):
+#   docker compose up
+#
+#   # With local LLM (Ollama):
+#   MODEL_PROVIDER=ollama docker compose --profile llm up
+#
+#   # After starting with LLM profile, pull a model:
+#   docker compose exec ollama ollama pull llama3.2
+#
+#   # Then access UI at http://localhost:8501
+#   # Toggle "Use local LLM (Ollama)" in the sidebar

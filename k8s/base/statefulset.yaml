@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eks-assessor
+  namespace: eks-assessor
+  labels:
+    app.kubernetes.io/name: eks-assessor
+    app.kubernetes.io/part-of: eks-assessor
+spec:
+  serviceName: eks-assessor
+  replicas: 1
+  # EBS volumes are ReadWriteOnce and tied to a single AZ.
+  # With replicas=1, we avoid multi-attach errors.
+  # For HA, run multiple StatefulSets in different AZs.
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: eks-assessor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: eks-assessor
+        app.kubernetes.io/part-of: eks-assessor
+    spec:
+      serviceAccountName: eks-assessor
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: eks-assessor
+          image: eks-assessor:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8501
+              name: http
+          env:
+            - name: WORKSPACE_DIR
+              value: "/workspace"
+            - name: MODEL_PROVIDER
+              value: "none"
+            - name: STREAMLIT_SERVER_HEADLESS
+              value: "true"
+            - name: HOME
+              value: "/tmp"
+            - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+              value: "false"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      volumeClaimTemplates:
+        - metadata:
+            name: workspace
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 5Gi
+            # storageClassName patched per overlay (local: standard, eks: gp3)

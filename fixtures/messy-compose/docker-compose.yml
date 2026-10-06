@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    # BAD: Fixed container name (prevents scaling)
+    container_name: messy-web
+    ports:
+      - "8080:8080"
+    # BAD: Host bind mount
+    volumes:
+      - /home/user/data:/data
+    # BAD: Privileged mode
+    privileged: true
+    # BAD: Host network mode
+    network_mode: host
+    # BAD: depends_on for startup ordering (not health-based)
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+
+  db:
+    image: postgres:15
+    # BAD: No Dockerfile, just uses build: . but no Dockerfile exists for this service
+    # This service is defined but web uses build: . which doesn't exist
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+    # BAD: Host bind mount for database
+    volumes:
+      - /home/user/postgres:/var/lib/postgresql/data
+
+  # A service that has build: . but no Dockerfile exists
+  broken-service:
+    build: .
+    # This will fail because there's no Dockerfile for this context

@@ -1,0 +1,8 @@
+-- SQLite database file (bad practice: storing DB in app dir)
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL
+);
+
+INSERT OR IGNORE INTO users (username, email) VALUES ('admin', 'admin@example.com');

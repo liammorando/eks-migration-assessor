@@ -1,0 +1,17 @@
+# unsafe_allow_html Allowlist
+# Each entry documents a call site that uses unsafe_allow_html=True with an f-string
+# containing repository-derived data. These are allowed but should be reviewed for XSS risk.
+#
+# Format: file:line | description | repo-derived variables | sanitization
+
+app/streamlit_app.py:146 | Ollama connection status indicator | ollama_status[1] (connection message) | Static messages from validate_ollama_host, not user-controlled
+app/streamlit_app.py:346 | App footer | t("footer"), t("footer_warn") | Static translations, no repo data
+app/ui/header.py:56 | App header with title and subtitle | _t("title", lang), _t("page_caption", lang) | Static translations, no repo data
+app/ui/results.py:82 | Score gauge SVG | result.score (integer 0-100) | Numeric only, safe
+app/ui/results.py:86 | Readiness badge | result.readiness (enum string) | Static enum values, safe
+app/ui/results.py:107 | Severity bar SVG | counts (dict of severity counts) | Numeric only, safe
+app/ui/results.py:111 | Severity legend | counts (dict of severity counts) | Numeric only, safe
+app/ui/results.py:120 | Files scanned count | result.files_scanned (integer) | Numeric only, safe
+app/ui/results.py:143 | Repository name | repo_name from result.repo_url | REPO-DERIVED: extracted from URL, no HTML escaping applied. RISK: LOW (URL segment only)
+app/ui/results.py:192 | Executive summary | result.summary (LLM output) | REPO-DERIVED: LLM processes repo data. RISK: MEDIUM - should be sanitized
+app/ui/theme.py:229 | Design system CSS injection | _CSS (module constant) | Static constant, safe

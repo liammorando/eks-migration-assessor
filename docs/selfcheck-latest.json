@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-10-05T22:31:10.146886",
+  "categories": {
+    "reliability": {
+      "score": 98,
+      "status": "FAIL",
+      "threshold": 100,
+      "details": {
+        "passed": 152,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 5,
+        "total": 154,
+        "pytest_rc": 1,
+        "stdout": "============================= test session starts =============================\r\nplatform win32 -- Python 3.11.9, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\Users\\Liam\\Documents\\Default Project\r\nconfigfile: pyproject.toml\r\ntestpaths: tests\r\nplugins: anyio-4.15.1, cov-7.1.0\r\ncollected 159 items\r\n\r\ntests\\test_agent.py ...........ss                                        [  8%]\r\ntests\\test_fixtures_exist.py ....                                        [ 10%]\r\ntests\\test_i18n.py ....                                                  [ 13%]\r\ntests\\test_perf.py .......                                               [ 17%]\r\ntests\\test_repo_and_tools.py ..................sss..                     [ 32%]\r\ntests\\test_rules.py .................................................... [ 64%]\r\n...                                                                      [ 66%]\r\ntests\\test_scoring_planner_report.py .............                       [ 74%]\r\ntests\\test_service.py ....                                               [ 77%]\r\ntests\\test_storage.py .........                                          [ 83%]\r\ntests\\test_ui_guard.py ...                                               [ 84%]\r\ntests\\test_ui_helpers.py ..........                                      [ 91%]\r\ntests\\test_ui_smoke.py ............FF                                    [100%]\r\n\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_ui_smoke.py::TestUISmoke::test_s13_clone_failure_timeout - ...\r\nFAILED tests/test_ui_smoke.py::TestUISmoke::test_s14_ask_agent_model_provider_none\r\n================== 2 failed, 152 passed, 5 skipped in 20.93s ==================\r\n",
+        "stderr": ""
+      }
+    },
+    "performance": {
+      "score": 100,
+      "status": "PASS",
+      "threshold": 100,
+      "details": {
+        "metrics": {
+          "cold_start_s": 0.95,
+          "analyze_stateful_s": 0.009,
+          "analyze_ready_s": 0.009,
+          "analyze_messy_s": 0.015,
+          "render_500_s": 0.278,
+          "network_calls": 0,
+          "peak_memory_mb": 0.1
+        },
+        "checks": {
+          "cold_start_s < 3": true,
+          "analyze_fixture_s < 3": true,
+          "render_500_s < 3": true,
+          "network_calls == 0": true
+        }
+      }
+    },
+    "security": {
+      "score": 100,
+      "status": "PASS",
+      "threshold": 80,
+      "details": {
+        "checks": {
+          "unsafe_html_allowlist_exists": true,
+          "unsafe_html_entries": 11,
+          "unmatched_div_in_markdown": true,
+          "no_fixture_secrets_in_reports": true
+        },
+        "defects": []
+      }
+    },
+    "ux_static": {
+      "score": 100,
+      "status": "PASS",
+      "threshold": 80,
+      "details": {
+        "checks": {
+          "one_language_control": true,
+          "analyze_card_tested": true,
+          "no_small_font": true,
+          "no_emoji_flags": true,
+          "buttons_have_labels": true
+        },
+        "defects": []
+      }
+    },
+    "quality": {
+      "score": 100,
+      "status": "PASS",
+      "threshold": 100,
+      "details": {
+        "ruff_errors": 0,
+        "rc": 0,
+        "stdout": "All checks passed!\n"
+      }
+    }
+  },
+  "defects": [
+    {
+      "id": "REL-01",
+      "category": "reliability",
+      "description": "Pytest failures: 2 failed out of 154",
+      "severity": "blocker"
+    }
+  ],
+  "skipped_checks": [],
+  "overall_score": 99.6,
+  "overall_status": "FAIL"
+}

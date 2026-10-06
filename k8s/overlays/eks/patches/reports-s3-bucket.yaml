@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eks-assessor
+  namespace: eks-assessor
+spec:
+  template:
+    spec:
+      containers:
+        - name: eks-assessor
+          env:
+            - name: REPORTS_S3_BUCKET
+              value: "REPLACE_WITH_BUCKET_FROM_TERRAFORM_OUTPUT"

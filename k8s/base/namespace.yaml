@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eks-assessor
+  labels:
+    app.kubernetes.io/name: eks-assessor
+    app.kubernetes.io/part-of: eks-assessor

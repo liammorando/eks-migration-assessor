@@ -1,0 +1,18 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: eks-assessor
+# Use a version compatible with the EKS version you target
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
+  - role: worker
+  - role: worker
+# Enable EBS CSI driver for local testing (optional, uses local-path provisioner)
+# featureGates:
+#   CSIStorageCapacity: true

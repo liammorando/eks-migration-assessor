@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  python:
+    name: Python Checks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        install:
+          - dev
+          - llm
+          - aws
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[${{ matrix.install }}]"
+
+      - name: Run Ruff
+        run: ruff check .
+
+      - name: Run Tests
+        run: pytest -q
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -f docker/Dockerfile .
+
+  kubernetes:
+    name: Kubernetes Manifests Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -L https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate Local Overlay
+        run: |
+          kubectl kustomize k8s/overlays/local | kubeconform -strict -ignore-missing-schemas
+
+      - name: Validate EKS Overlay
+        run: |
+          kubectl kustomize k8s/overlays/eks | kubeconform -strict -ignore-missing-schemas
+
+  terraform:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.x
+
+      - name: Terraform Format Check
+        run: terraform -chdir=terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: terraform -chdir=terraform init -backend=false
+
+      - name: Terraform Validate
+        run: terraform -chdir=terraform validate
+
+      - name: Run tflint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Run tflint
+        run: tflint --init && tflint --chdir=terraform
+
+  security:
+    name: Security Scan (checkov + trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install checkov
+        run: pip install checkov
+
+      - name: Run checkov on terraform
+        run: checkov -d terraform --soft-fail
+
+      - name: Run checkov on k8s
+        run: checkov -d k8s --soft-fail
+
+      - name: Install trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Run trivy fs scan
+        run: trivy fs --severity HIGH,CRITICAL --format sarif --output trivy-fs.sarif .
+
+      - name: Run trivy image scan
+        run: trivy image --severity HIGH,CRITICAL --format sarif --output trivy-image.sarif eks-assessor:dev
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+      - name: Upload image scan SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+  selfcheck:
+    name: Self Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run Self Check
+        run: python scripts/selfcheck.py
+        # Continue on error to upload artifact
+        continue-on-error: true
+
+      - name: Upload Self Check Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: selfcheck-report
+          path: docs/selfcheck-latest.json
+
+  secrets:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for committed secrets
+        run: |
+          if git ls-files | grep -E '(admin\.conf|\.env|opencode\.json)$'; then
+            echo "ERROR: Secret files found in repository!"
+            git ls-files | grep -E '(admin\.conf|\.env|opencode\.json)$'
+            exit 1
+          else
+            echo "No secret files found"
+          fi
