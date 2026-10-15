@@ -2,7 +2,6 @@
 
 > **Analyze any public GitHub/GitLab repository for EKS migration readiness — free, deterministic, and optionally AI-enhanced.**
 
-![Architecture](architecture.png)
 
 ## Descripción en Español
 
